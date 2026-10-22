@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import useLogs from "../user/uselogs";
-import { today, daysAgo, formatDate } from "../lib/health";
+import { today, currentWeekDays, formatDate } from "../lib/health";
 import { estimateTdee } from "../lib/nutrition";
 import { inputClass, cardClass, primaryBtn } from "./ui";
 
@@ -31,7 +31,7 @@ export default function DietTab({ profile }) {
   const goal = customGoal || estimateTdee(profile);
   const goalLabel = customGoal ? "sua meta" : "manutenção estimada";
 
-  const days = Array.from({ length: 7 }, (_, i) => daysAgo(6 - i));
+  const days = currentWeekDays();
 
   const totals = {};
   const proteins = {};
@@ -169,7 +169,10 @@ export default function DietTab({ profile }) {
 
       {/* GRÁFICO */}
       <div className={cardClass}>
-        <h3 className="mb-4 font-semibold text-white">Últimos 7 dias</h3>
+        <h3 className="mb-1 font-semibold text-white">Progresso da semana</h3>
+        <p className="mb-4 text-sm text-slate-400">
+          Refeições registradas em cada dia · calorias por dia
+        </p>
 
         <div className="relative flex h-40 items-end gap-2">
           {goal && (
@@ -196,11 +199,48 @@ export default function DietTab({ profile }) {
           {days.map((d) => (
             <span
               key={d}
-              className="flex-1 text-center text-xs text-slate-500"
+              className={`flex-1 text-center text-xs ${
+                d === today() ? "font-semibold text-purple-300" : "text-slate-500"
+              }`}
             >
-              {formatDate(d)}
+              {new Date(`${d}T00:00:00`).toLocaleDateString("pt-BR", {
+                weekday: "short",
+              }).replace(".", "")}
             </span>
           ))}
+        </div>
+
+        <div className="mt-4 grid grid-cols-4 gap-2 sm:grid-cols-7">
+          {days.map((d) => {
+            const hasMeals = rows.some((row) => row.log_date === d);
+            const weekday = new Date(`${d}T00:00:00`).toLocaleDateString(
+              "pt-BR",
+              { weekday: "short" }
+            ).replace(".", "");
+
+            return (
+              <div
+                key={d}
+                className={`rounded-xl border p-3 ${
+                  hasMeals
+                    ? "border-purple-500/30 bg-purple-500/10"
+                    : "border-white/10 bg-black/20"
+                }`}
+              >
+                <p className="text-xs capitalize text-slate-400">{weekday}</p>
+                <p className="mt-1 text-sm font-semibold text-white">
+                  {hasMeals ? `${Math.round(totals[d] || 0)} kcal` : "—"}
+                </p>
+                <p
+                  className={`mt-1 text-[10px] ${
+                    hasMeals ? "text-green-400" : "text-slate-500"
+                  }`}
+                >
+                  {hasMeals ? "Registrado" : "Sem registro"}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </div>
 

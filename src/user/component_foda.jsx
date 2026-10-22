@@ -9,13 +9,13 @@ export default function CreateTask() {
   const navigate = useNavigate();
 
   const [name, setName] = useState("");
-  const [requiredExercises, setRequiredExercises] = useState(1);
+  const [requiredExercises, setRequiredExercises] = useState("1");
 
   const [exercises, setExercises] = useState([
     {
       exercise_id: null,
       name: "",
-      required_sets: 1,
+      required_sets: "1",
     },
   ]);
 
@@ -23,9 +23,9 @@ export default function CreateTask() {
   const [error, setError] = useState("");
 
   function changeExerciseCount(value) {
-    const count = Math.max(1, Number(value));
-
-    setRequiredExercises(count);
+    setRequiredExercises(value);
+    const count = Number(value);
+    if (!Number.isInteger(count) || count < 1 || count > 50) return;
 
     setExercises((current) => {
       if (current.length > count) {
@@ -39,7 +39,7 @@ export default function CreateTask() {
           () => ({
             exercise_id: null,
             name: "",
-            required_sets: 1,
+            required_sets: "1",
           })
         ),
       ];
@@ -66,7 +66,7 @@ export default function CreateTask() {
 
       copy[index] = {
         ...copy[index],
-        required_sets: Math.max(1, Number(value)),
+        required_sets: value,
       };
 
       return copy;
@@ -89,9 +89,19 @@ export default function CreateTask() {
       return;
     }
 
-    if (exercises.length !== requiredExercises) {
+    const exerciseCount = Number(requiredExercises);
+    if (
+      !Number.isInteger(exerciseCount) ||
+      exerciseCount < 1 ||
+      exerciseCount > 50
+    ) {
+      setError("A quantidade de exercícios deve ser um número entre 1 e 50.");
+      return;
+    }
+
+    if (exercises.length !== exerciseCount) {
       setError(
-        `Você precisa adicionar ${requiredExercises} exercício(s).`
+        `Você precisa adicionar ${exerciseCount} exercício(s).`
       );
       return;
     }
@@ -109,8 +119,8 @@ export default function CreateTask() {
 
     const invalidSets = exercises.some(
       (exercise) =>
-        !exercise.required_sets ||
-        exercise.required_sets < 1
+        !Number.isInteger(Number(exercise.required_sets)) ||
+        Number(exercise.required_sets) < 1
     );
 
     if (invalidSets) {
@@ -126,7 +136,7 @@ export default function CreateTask() {
       await createTask({
         projectId,
         name: name.trim(),
-        requiredExercises,
+        requiredExercises: exerciseCount,
         exercises,
       });
 
@@ -210,13 +220,21 @@ export default function CreateTask() {
             </label>
 
             <input
-              type="number"
-              min="1"
-              max="50"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={2}
               value={requiredExercises}
+              onFocus={(e) => e.target.select()}
               onChange={(e) =>
                 changeExerciseCount(e.target.value)
               }
+              onBlur={() => {
+                const count = Number(requiredExercises);
+                if (!Number.isInteger(count) || count < 1 || count > 50) {
+                  setRequiredExercises(String(exercises.length));
+                }
+              }}
               className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none focus:border-purple-500"
             />
 
@@ -259,15 +277,24 @@ export default function CreateTask() {
                   </label>
 
                   <input
-                    type="number"
-                    min="1"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={3}
                     value={exercise.required_sets}
+                    onFocus={(e) => e.target.select()}
                     onChange={(e) =>
                       changeSets(
                         index,
                         e.target.value
                       )
                     }
+                    onBlur={(e) => {
+                      const sets = Number(e.target.value);
+                      if (!Number.isInteger(sets) || sets < 1) {
+                        changeSets(index, "1");
+                      }
+                    }}
                     className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none focus:border-purple-500"
                   />
 

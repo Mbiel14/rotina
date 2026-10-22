@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabaseClient";
 import useProfile from "../user/useprofile";
 import Avatar from "../components/avatar";
 import DietTab from "../components/diettab";
+import WeeklyWorkoutProgress from "../components/weeklyworkoutprogress";
 
 const TABS = [
   ["treino", "Treino"],
@@ -205,6 +206,10 @@ export default function Home() {
 
         {tab === "treino" && (
           <>
+            <WeeklyWorkoutProgress
+              projectIds={projects.map((project) => project.id)}
+            />
+
             {error && (
               <div className="mb-6 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-red-400">
                 {error}

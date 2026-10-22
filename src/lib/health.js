@@ -17,6 +17,19 @@ export function daysAgo(days) {
   return toDateInputValue(date);
 }
 
+export function currentWeekDays() {
+  const now = new Date();
+  const mondayOffset = (now.getDay() + 6) % 7;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - mondayOffset);
+
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(monday);
+    date.setDate(monday.getDate() + index);
+    return toDateInputValue(date);
+  });
+}
+
 export function formatDate(value) {
   const [year, month, day] = value.split("-").map(Number);
 

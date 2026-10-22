@@ -48,7 +48,9 @@ export default function TaskDetail() {
   const [task, setTask] = useState(null);
   const [items, setItems] = useState([]); // exercícios do treino
   const [sets, setSets] = useState({}); // { [task_exercise_id]: [{weight, reps}] }
+  const [history, setHistory] = useState([]);
   const [previous, setPrevious] = useState(null); // última sessão
+  const [selectedExerciseId, setSelectedExerciseId] = useState("");
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -97,6 +99,7 @@ export default function TaskDetail() {
 
     const list = teData || [];
     setItems(list);
+    setSelectedExerciseId(list[0]?.exercise_id || "");
 
     const initial = {};
     list.forEach((item) => {
@@ -107,18 +110,24 @@ export default function TaskDetail() {
     });
     setSets(initial);
 
-    // última sessão deste treino (comparação e sugestão de kg)
-    const { data: lastData } = await supabase
+    // Histórico deste treino para comparação e evolução das cargas.
+    const { data: historyData, error: historyError } = await supabase
       .from("workout_sessions")
       .select(
         "id, total_volume, finished_at, session_sets(exercise_id, set_number, weight_kg, reps)"
       )
       .eq("task_id", taskId)
-      .order("finished_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .order("finished_at", { ascending: false });
 
-    setPrevious(lastData || null);
+    if (historyError) {
+      setError(historyError.message);
+      setLoading(false);
+      return;
+    }
+
+    const sessions = historyData || [];
+    setHistory(sessions);
+    setPrevious(sessions[0] || null);
     setLoading(false);
   }
 
@@ -158,6 +167,45 @@ export default function TaskDetail() {
       };
     });
   }
+
+  const selectedExercise =
+    items.find((item) => item.exercise_id === selectedExerciseId) || items[0];
+  const exerciseProgress = selectedExercise
+    ? history
+        .slice()
+        .reverse()
+        .map((session) => {
+          const weights = (session.session_sets || [])
+            .filter((set) => set.exercise_id === selectedExercise.exercise_id)
+            .map((set) => Number(set.weight_kg))
+            .filter(Number.isFinite);
+
+          return {
+            id: session.id,
+            date: session.finished_at,
+            weight: weights.length ? Math.max(...weights) : null,
+          };
+        })
+        .filter((session) => session.weight !== null)
+    : [];
+  const latestWeight =
+    exerciseProgress[exerciseProgress.length - 1]?.weight ?? null;
+  const recordWeight = exerciseProgress.length
+    ? Math.max(...exerciseProgress.map((session) => session.weight))
+    : null;
+  const previousWeight =
+    exerciseProgress.length > 1
+      ? exerciseProgress[exerciseProgress.length - 2].weight
+      : null;
+  const weightChange =
+    latestWeight !== null && previousWeight !== null
+      ? latestWeight - previousWeight
+      : null;
+  const chartSessions = exerciseProgress.slice(-8);
+  const chartMaxWeight = Math.max(
+    0,
+    ...chartSessions.map((session) => session.weight)
+  );
 
   async function finishSession() {
     setError("");
@@ -343,6 +391,109 @@ export default function TaskDetail() {
             {error}
           </div>
         )}
+
+        <section
+          aria-label="Dashboard de progresso do treino"
+          className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6"
+        >
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-sm font-medium text-purple-300">Progresso</p>
+              <h2 className="mt-1 text-xl font-bold">Evolução das cargas</h2>
+            </div>
+            {items.length > 0 && (
+              <label className="w-full text-sm text-slate-400 sm:max-w-xs">
+                Acompanhar exercício
+                <select
+                  value={selectedExercise?.exercise_id || ""}
+                  onChange={(e) => setSelectedExerciseId(e.target.value)}
+                  className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-purple-500"
+                >
+                  {items.map((item) => (
+                    <option key={item.id} value={item.exercise_id}>
+                      {item.exercises?.name || "Exercício"}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+          </div>
+
+          {exerciseProgress.length === 0 ? (
+            <p className="mt-6 rounded-xl bg-black/20 p-4 text-sm text-slate-400">
+              Registre uma sessão para começar a acompanhar o peso levantado.
+            </p>
+          ) : (
+            <>
+              <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                <div className="rounded-xl bg-black/20 p-4">
+                  <p className="text-2xl font-bold">
+                    {formatKg(latestWeight)} kg
+                  </p>
+                  <p className="mt-1 text-xs text-slate-400">Última carga máxima</p>
+                </div>
+                <div className="rounded-xl bg-black/20 p-4">
+                  <p className="text-2xl font-bold">
+                    {formatKg(recordWeight)} kg
+                  </p>
+                  <p className="mt-1 text-xs text-slate-400">Maior carga registrada</p>
+                </div>
+                <div className="col-span-2 rounded-xl bg-black/20 p-4 sm:col-span-1">
+                  <p
+                    className={`text-2xl font-bold ${
+                      weightChange === null
+                        ? "text-white"
+                        : weightChange >= 0
+                          ? "text-green-400"
+                          : "text-amber-400"
+                    }`}
+                  >
+                    {weightChange === null
+                      ? "—"
+                      : `${weightChange > 0 ? "+" : ""}${formatKg(weightChange)} kg`}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-400">vs. sessão anterior</p>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <p className="mb-3 text-sm text-slate-400">
+                  Carga máxima por sessão · últimas {chartSessions.length}
+                </p>
+                <div className="flex h-40 items-end gap-2 overflow-x-auto rounded-xl bg-black/20 px-3 pt-4">
+                  {chartSessions.map((session) => {
+                    const height =
+                      chartMaxWeight > 0
+                        ? Math.max(8, (session.weight / chartMaxWeight) * 100)
+                        : 8;
+
+                    return (
+                      <div
+                        key={session.id}
+                        className="flex h-full min-w-12 flex-1 flex-col items-center justify-end gap-2"
+                      >
+                        <span className="text-xs text-slate-300">
+                          {formatKg(session.weight)}
+                        </span>
+                        <div
+                          title={`${formatKg(session.weight)} kg`}
+                          className="w-full max-w-12 rounded-t-lg bg-gradient-to-t from-purple-700 to-fuchsia-400"
+                          style={{ height: `${height}%` }}
+                        />
+                        <span className="pb-2 text-[10px] text-slate-500">
+                          {new Intl.DateTimeFormat("pt-BR", {
+                            day: "2-digit",
+                            month: "2-digit",
+                          }).format(new Date(session.date))}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
+          )}
+        </section>
 
         {items.length === 0 ? (
           <div className="mt-8 rounded-2xl border border-dashed border-white/10 p-10 text-center text-slate-400">
