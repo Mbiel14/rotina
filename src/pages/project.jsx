@@ -104,7 +104,7 @@ export default function Project() {
   if (loading) {
     return (
       <main className="min-h-screen bg-slate-950 p-8 text-white">
-        <p className="text-slate-400">Carregando projeto...</p>
+        <p className="text-slate-400">Carregando rotina...</p>
       </main>
     );
   }
@@ -113,7 +113,7 @@ export default function Project() {
   if (!project) {
     return (
       <main className="min-h-screen bg-slate-950 p-8 text-white">
-        <p>Projeto não encontrado.</p>
+        <p>Rotina não encontrado.</p>
 
         {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
 
@@ -121,7 +121,7 @@ export default function Project() {
           onClick={() => navigate("/dashboard")}
           className="mt-4 text-sm text-purple-400 hover:text-purple-300"
         >
-          ← Voltar para projetos
+          ← Voltar para rotinas
         </button>
       </main>
     );
@@ -137,7 +137,7 @@ export default function Project() {
             onClick={() => navigate("/dashboard")}
             className="mb-5 text-sm text-slate-400 hover:text-white"
           >
-            ← Voltar para projetos
+            ← Voltar para rotinas
           </button>
 
           <h1 className="text-3xl font-bold">{project.name}</h1>
@@ -155,7 +155,7 @@ export default function Project() {
             <h2 className="text-xl font-bold">Treinos</h2>
 
             <p className="text-sm text-slate-400">
-              Exercícios e tarefas deste projeto
+              Exercícios e tarefas dessa rotina. Você pode criar quantos treinos quiser.
             </p>
           </div>
 
@@ -177,7 +177,7 @@ export default function Project() {
         {/* LISTA */}
         {tasks.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-white/10 p-10 text-center">
-            <p className="text-slate-400">Nenhum treino neste projeto.</p>
+            <p className="text-slate-400">Nenhum treino nesta rotina.</p>
 
             <button
               onClick={() => navigate(`/projects/${projectId}/tasks/create`)}

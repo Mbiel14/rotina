@@ -85,7 +85,7 @@ export default function CreateTask() {
     }
 
     if (!projectId) {
-      setError("Projeto não identificado.");
+      setError("rotina não identificado.");
       return;
     }
 
@@ -156,7 +156,7 @@ export default function CreateTask() {
           }
           className="mb-6 text-sm text-slate-400 hover:text-white"
         >
-          ← Voltar para o projeto
+          ← Voltar para as rotinas
         </button>
 
         <form
