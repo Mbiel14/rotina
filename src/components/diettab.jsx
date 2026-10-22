@@ -38,7 +38,7 @@ export default function DietTab({ profile }) {
   rows.forEach((r) => {
     totals[r.log_date] = (totals[r.log_date] || 0) + Number(r.calories);
     proteins[r.log_date] =
-      (proteins[r.log_date] || 0) + Number(r.protein_g || 0);
+      (proteins[r.log_date] || 0) + Number(r.protein || 0);
   });
 
   const todayKcal = Math.round(totals[today()] || 0);
@@ -83,7 +83,7 @@ export default function DietTab({ profile }) {
       meal_type: mealType,
       name: name.trim(),
       calories: num(calories),
-      protein_g: protein === "" ? null : num(protein),
+      protein: protein === "" ? null : num(protein),
     });
 
     setSaving(false);
@@ -356,8 +356,8 @@ export default function DietTab({ profile }) {
                         <p className="font-medium text-white">{r.name}</p>
                         <p className="text-sm text-slate-500">
                           {r.meal_type} · {Math.round(r.calories)} kcal
-                          {r.protein_g != null
-                            ? ` · ${Number(r.protein_g)} g prot.`
+                          {r.protein != null
+                            ? ` · ${Number(r.protein)} g prot.`
                             : ""}
                         </p>
                       </div>
