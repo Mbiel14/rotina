@@ -1,0 +1,50 @@
+Fase 1 — MVP
+Faça somente:
+
+Login/cadastro
+
+Criar treino
+
+Adicionar exercícios
+
+Iniciar treino
+
+Registrar séries
+
+Finalizar treino
+
+Histórico
+
+Isso já é um projeto completo.
+
+Fase 2 — Dashboard
+Depois adicione:
+
+gráficos;
+
+volume;
+
+frequência;
+
+PRs;
+
+evolução por exercício;
+
+estatísticas.
+
+Fase 3 — Features avançadas
+Por último:
+
+timer de descanso;
+
+fotos de evolução;
+
+metas;
+
+calendário;
+
+notificações;
+
+templates de treino;
+
+compartilhamento de treinos.
