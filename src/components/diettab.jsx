@@ -121,7 +121,7 @@ export default function DietTab({ profile }) {
           user_id: user.id,
           log_date: date,
           meal_type: mealType,
-          name: name.trim(),
+          meal_name: name.trim(),
           calories: num(calories),
           protein: protein.trim() === "" ? null : num(protein),
         });
@@ -456,7 +456,7 @@ export default function DietTab({ profile }) {
                     >
                       <div>
                         <p className="font-medium text-white">
-                          {r.name}
+                          {r.meal_name || r.name}
                         </p>
                         <p className="text-sm text-slate-500">
                           {r.meal_type} · {Math.round(r.calories)} kcal
